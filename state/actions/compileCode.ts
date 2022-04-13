@@ -37,12 +37,11 @@ export const compileCode = async (activeId: number) => {
       state.files.forEach(file => {
         files[file.name] = file.content;
       });
-      const res = await asc.main([state.files[activeId].name, "--textFile", "-o", state.files[activeId].name, "--runtime", "minimal", "-O3"], {
+      const res = await asc.main([state.files[activeId].name, "--textFile", "-o", state.files[activeId].name, "--runtime", "minimal", "-O0", "--debug"], {
         readFile: (name, baseDir) => {
           console.log('--> ', name)
           const currentFile = state.files.find(file => file.name === name);
           if (currentFile) {
-            console.log('hei')
             return currentFile.content;
           }
           return null
