@@ -64,7 +64,7 @@ interface ITooltip {
   onOpenChange?: (open: boolean) => void;
 }
 
-const Tooltip: React.FC<ITooltip> = ({
+const Tooltip: React.FC<ITooltip & { children: React.ReactNode }> = ({
   children,
   content,
   open,
