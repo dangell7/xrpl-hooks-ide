@@ -10,7 +10,6 @@ import state from "../../state";
 import { compileCode } from "../../state/actions";
 import { getSplit, saveSplit } from "../../state/actions/persistSplits";
 
-
 const HooksEditor = dynamic(() => import("../../components/HooksEditor"), {
   ssr: false,
 });
@@ -34,8 +33,10 @@ const Home: NextPage = () => {
     >
       <main style={{ display: "flex", flex: 1, position: "relative" }}>
         <HooksEditor />
-        {snap.files[snap.active]?.name?.split(".")?.[1].toLowerCase() ===
-          "c" && (
+        {(snap.files[snap.active]?.name?.split(".")?.[1].toLowerCase() ===
+          "c" ||
+          snap.files[snap.active]?.name?.split(".")?.[1].toLowerCase() ===
+            "ts") && (
           <Hotkeys
             keyName="command+b,ctrl+b"
             onKeyDown={() =>
