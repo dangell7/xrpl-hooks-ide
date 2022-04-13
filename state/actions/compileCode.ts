@@ -14,6 +14,7 @@ import { ref } from "valtio";
  */
 export const compileCode = async (activeId: number) => {
   // Save the file to global state
+  let asc: typeof import("assemblyscript/dist/asc") | undefined
   saveFile(false);
   if (!process.env.NEXT_PUBLIC_COMPILE_API_ENDPOINT) {
     throw Error("Missing env!");
@@ -23,8 +24,38 @@ export const compileCode = async (activeId: number) => {
     // if compiling is ongoing return
     return;
   }
-  // Set loading state to true
   state.compiling = true;
+  if (typeof window !== 'undefined') {
+    // IF AssemblyScript
+    if (state.files[activeId].language.toLowerCase() === 'ts' || state.files[activeId].language.toLowerCase() === 'typescript') {
+      if (!asc) {
+        asc = await import('assemblyscript/dist/asc')
+        console.log('here', asc, state.files[activeId].content)
+      }
+      const res = await asc.compileString(state.files[activeId].content, {
+        optimizeLevel: 3,
+        runtime: "minimal",
+        noAssert: true
+      });
+      if (res.binary && res.binary.buffer) {
+        state.files[activeId].lastCompiled = new Date();
+        state.files[activeId].compiledContent = ref(res.binary);
+        state.files[activeId].compiledWatContent = res.text;
+
+        state.logs.push({
+          type: "success",
+          message: `File ${state.files?.[activeId]?.name} compiled successfully. Ready to deploy.`,
+          link: Router.asPath.replace("develop", "deploy"),
+          linkText: "Go to deploy",
+        });
+      }
+      state.compiling = false;
+      return
+    }
+  }
+
+  // Set loading state to true
+
   state.logs = []
   try {
     const res = await fetch(process.env.NEXT_PUBLIC_COMPILE_API_ENDPOINT, {
