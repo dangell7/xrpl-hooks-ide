@@ -148,7 +148,7 @@ const LogBox: FC<ILogBox> = ({
 
 export const Log: FC<ILog> = ({
   type,
-  timestamp: timestamp,
+  timestring,
   message: _message,
   link,
   linkText,
@@ -187,8 +187,17 @@ export const Log: FC<ILog> = ({
     },
     [accounts]
   );
-  _message = _message.trim().replace(/\n /gi, "\n");
-  const message = enrichAccounts(_message);
+
+  let message: ReactNode;
+  
+  if (typeof _message === 'string') {
+    _message = _message.trim().replace(/\n /gi, "\n");
+    message = enrichAccounts(_message)
+  }
+  else {
+    message = _message
+  }
+
   const jsonData = enrichAccounts(_jsonData);
 
   return (
@@ -198,9 +207,9 @@ export const Log: FC<ILog> = ({
         activeAccountAddress={dialogAccount}
       />
       <LogText variant={type}>
-        {timestamp && (
+        {timestring && (
           <Text muted monospace>
-            {timestamp}{" "}
+            {timestring}{" "}
           </Text>
         )}
         <Pre>{message} </Pre>

@@ -1,5 +1,6 @@
 import React from "react";
 import { styled } from "../stitches.config";
+import * as LabelPrim from '@radix-ui/react-label';
 
 export const Input = styled("input", {
   // Reset
@@ -59,6 +60,8 @@ export const Input = styled("input", {
   },
   "&:read-only": {
     backgroundColor: "$mauve2",
+    color: "$text",
+    opacity: 0.8,
     "&:focus": {
       boxShadow: "inset 0px 0px 0px 1px $colors$mauve7",
     },
@@ -156,3 +159,11 @@ const ReffedInput = React.forwardRef<
 >((props, ref) => <Input {...props} ref={ref} />);
 
 export default ReffedInput;
+
+
+const LabelRoot = (props: LabelPrim.LabelProps) => <LabelPrim.Root {...props} />
+
+export const Label = styled(LabelRoot, {
+  display: 'inline-block',
+  mb: '$1'
+})

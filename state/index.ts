@@ -35,13 +35,18 @@ export interface IAccount {
   hooks: string[];
   isLoading: boolean;
   version?: string;
+  error?: {
+    message: string;
+    code: string;
+  } | null;
 }
 
 export interface ILog {
   type: "error" | "warning" | "log" | "success";
-  message: string;
+  message: string | JSX.Element;
+  key?: string;
   jsonData?: any,
-  timestamp?: string;
+  timestring?: string;
   link?: string;
   linkText?: string;
   defaultCollapsed?: boolean
@@ -73,6 +78,10 @@ export interface IState {
   mainModalOpen: boolean;
   mainModalShowed: boolean;
   accounts: IAccount[];
+  compileOptions: {
+    optimizationLevel: '-O0' | '-O1' | '-O2' | '-O3' | '-O4' | '-Os';
+    strip: boolean
+  }
 }
 
 // let localStorageState: null | string = null;
@@ -102,6 +111,10 @@ let initialState: IState = {
   mainModalOpen: false,
   mainModalShowed: false,
   accounts: [],
+  compileOptions: {
+    optimizationLevel: '-O0',
+    strip: false
+  }
 };
 
 let localStorageAccounts: string | null = null;
@@ -159,3 +172,5 @@ if (typeof window !== "undefined") {
   });
 }
 export default state
+
+export * from './transactions'

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Trash, X } from "phosphor-react";
 import Button from "./Button";
 import Box from "./Box";
@@ -11,7 +11,7 @@ import {
   DialogClose,
   DialogTrigger,
 } from "./Dialog";
-import { Input } from "./Input";
+import { Input, Label } from "./Input";
 import {
   Controller,
   SubmitHandler,
@@ -25,6 +25,7 @@ import type { IAccount } from "../state";
 import { useSnapshot } from "valtio";
 import state from "../state";
 import toast from "react-hot-toast";
+import { sha256 } from "../state/actions/deployHook";
 
 const transactionOptions = Object.keys(tts).map((key) => ({
   label: key,
@@ -36,6 +37,7 @@ export type SetHookData = {
     value: keyof TTS;
     label: string;
   }[];
+  HookNamespace: string;
   HookParameters: {
     HookParameter: {
       HookParameterName: string;
@@ -57,12 +59,26 @@ export const SetHookDialog: React.FC<{ account: IAccount }> = ({ account }) => {
     register,
     handleSubmit,
     control,
-    // formState: { errors },
-  } = useForm<SetHookData>();
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<SetHookData>({
+    defaultValues: {
+      HookNamespace: snap.files?.[snap.activeWat]?.name?.split(".")?.[0] || "",
+    },
+  });
   const { fields, append, remove } = useFieldArray({
     control,
     name: "HookParameters", // unique name for your Field Array
   });
+
+  // Update value if activeWat changes
+  useEffect(() => {
+    setValue(
+      "HookNamespace",
+      snap.files?.[snap.activeWat]?.name?.split(".")?.[0] || ""
+    );
+  }, [snap.activeWat, snap.files, setValue]);
   // const {
   //   fields: grantFields,
   //   append: grantAppend,
@@ -71,6 +87,19 @@ export const SetHookDialog: React.FC<{ account: IAccount }> = ({ account }) => {
   //   control,
   //   name: "HookGrants", // unique name for your Field Array
   // });
+  const [hashedNamespace, setHashedNamespace] = useState("");
+  const namespace = watch(
+    "HookNamespace",
+    snap.files?.[snap.active]?.name?.split(".")?.[0] || ""
+  );
+  const calculateHashedValue = useCallback(async () => {
+    const hashedVal = await sha256(namespace);
+    setHashedNamespace(hashedVal.toUpperCase());
+  }, [namespace]);
+  useEffect(() => {
+    calculateHashedValue();
+  }, [namespace, calculateHashedValue]);
+
   if (!account) {
     return null;
   }
@@ -89,6 +118,7 @@ export const SetHookDialog: React.FC<{ account: IAccount }> = ({ account }) => {
     }
     toast.error(`Transaction failed! (${res?.engine_result_message})`);
   };
+
   return (
     <Dialog open={isSetHookDialogOpen} onOpenChange={setIsSetHookDialogOpen}>
       <DialogTrigger asChild>
@@ -111,7 +141,7 @@ export const SetHookDialog: React.FC<{ account: IAccount }> = ({ account }) => {
           <DialogDescription as="div">
             <Stack css={{ width: "100%", flex: 1 }}>
               <Box css={{ width: "100%" }}>
-                <label>Invoke on transactions</label>
+                <Label>Invoke on transactions</Label>
                 <Controller
                   name="Invoke"
                   control={control}
@@ -130,9 +160,28 @@ export const SetHookDialog: React.FC<{ account: IAccount }> = ({ account }) => {
                 />
               </Box>
               <Box css={{ width: "100%" }}>
-                <label style={{ marginBottom: "10px", display: "block" }}>
+                <Label>Hook Namespace Seed</Label>
+                <Input
+                  {...register("HookNamespace", { required: true })}
+                  autoComplete={"off"}
+                  defaultValue={
+                    snap.files?.[snap.activeWat]?.name?.split(".")?.[0] || ""
+                  }
+                />
+                {errors.HookNamespace?.type === "required" && (
+                  <Box css={{ display: "inline", color: "$red11" }}>
+                    Namespace is required
+                  </Box>
+                )}
+                <Box css={{ mt: "$3" }}>
+                  <Label>Hook Namespace (sha256)</Label>
+                  <Input readOnly value={hashedNamespace} />
+                </Box>
+              </Box>
+              <Box css={{ width: "100%" }}>
+                <Label style={{ marginBottom: "10px", display: "block" }}>
                   Hook parameters
-                </label>
+                </Label>
                 <Stack>
                   {fields.map((field, index) => (
                     <Stack key={field.id}>
@@ -144,7 +193,7 @@ export const SetHookDialog: React.FC<{ account: IAccount }> = ({ account }) => {
                         )}
                       />
                       <Input
-                        placeholder="Parameter value"
+                        placeholder="Value (hex-quoted)"
                         {...register(
                           `HookParameters.${index}.HookParameter.HookParameterValue`
                         )}
