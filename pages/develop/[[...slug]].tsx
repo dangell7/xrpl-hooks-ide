@@ -244,11 +244,13 @@ const Home: NextPage = () => {
                 <Play weight="bold" size="16px" />
                 Compile to Wasm
               </Button>
-              <Popover content={<CompilerSettings />}>
-                <Button variant="primary" css={{ px: "10px" }}>
-                  <Gear size="16px" />
-                </Button>
-              </Popover>
+              {snap.files[snap.active].language === "c" && (
+                <Popover content={<CompilerSettings />}>
+                  <Button variant="primary" css={{ px: "10px" }}>
+                    <Gear size="16px" />
+                  </Button>
+                </Popover>
+              )}
             </Flex>
           </Hotkeys>
         )}
